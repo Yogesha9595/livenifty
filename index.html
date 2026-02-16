@@ -6,10 +6,16 @@
 <title>LiveNifty</title>
 
 <link href="https://cdn.jsdelivr.net/npm/@tabler/core@latest/dist/css/tabler.min.css" rel="stylesheet"/>
+
 <style>
 .market-live { color: #2fb344; font-weight:600; }
 .market-closed { color: #d63939; font-weight:600; }
 .news-bullet { margin-bottom:6px; }
+
+body.theme-dark {
+  background:#0f172a;
+  color:#e5e7eb;
+}
 </style>
 </head>
 <body>
@@ -17,12 +23,15 @@
 
 <header class="navbar navbar-expand-md navbar-light">
 <div class="container-xl">
-<h1 class="navbar-brand">LiveNifty.in</h1>
+<h1 class="navbar-brand">
+  <a href="/" style="text-decoration:none;color:inherit;">LiveNifty.in</a>
+</h1>
+
 <div class="navbar-nav flex-row order-md-last align-items-center">
-<a href="#" class="nav-link">Home</a>
-<a href="#" class="nav-link">Calculators</a>
-<a href="#" class="nav-link">About</a>
-<a href="#" class="nav-link">💝</a>
+<a href="/" class="nav-link">Home</a>
+<a href="/calculators" class="nav-link">Calculators</a>
+<a href="/about" class="nav-link">About</a>
+<a href="/contact" class="nav-link">Contact</a>
 <button class="btn btn-icon" id="themeToggle">🌙</button>
 </div>
 </div>
@@ -87,7 +96,6 @@ Loading market news…
 <div class="mt-2" id="payoffResult"></div>
 </div>
 </div>
-
 </div>
 
 <!-- Right Sidebar -->
@@ -101,6 +109,7 @@ Loading market news…
 <button class="btn btn-outline-primary" id="greekBtn" onclick="showCalc('greeks')">Greeks</button>
 </div>
 </div>
+
 <div class="card-body">
 
 <div id="positionCalc">
@@ -130,25 +139,6 @@ Loading market news…
 </div>
 </div>
 
-<!-- Mini Option Chain -->
-<div class="card mt-4">
-<div class="card-header">
-<h3 class="card-title">Mini Option Chain</h3>
-</div>
-<div class="card-body">
-<select id="chainSymbol" class="form-control mb-2" onchange="loadOptionChain()">
-<option value="NIFTY">NIFTY</option>
-<option value="BANKNIFTY">BANKNIFTY</option>
-</select>
-<table class="table table-sm">
-<thead>
-<tr><th>Strike</th><th>CE</th><th>PE</th></tr>
-</thead>
-<tbody id="optionChainBody"></tbody>
-</table>
-</div>
-</div>
-
 </div>
 </div>
 
@@ -160,9 +150,20 @@ Loading market news…
 </div>
 </div>
 
+<!-- Footer -->
 <footer class="footer bg-dark text-white mt-5">
-<div class="container-xl text-center py-3">
-© 2026 LiveNifty.in
+<div class="container-xl text-center py-4">
+
+<div class="mb-2">
+<a href="/about" class="text-white me-3">About</a>
+<a href="/privacy-policy" class="text-white me-3">Privacy Policy</a>
+<a href="/terms" class="text-white me-3">Terms</a>
+<a href="/disclaimer" class="text-white me-3">Disclaimer</a>
+<a href="/contact" class="text-white">Contact</a>
+</div>
+
+<div>© 2026 LiveNifty.in</div>
+
 </div>
 </footer>
 
@@ -171,6 +172,30 @@ Loading market news…
 <script src="https://cdn.jsdelivr.net/npm/@tabler/core@latest/dist/js/tabler.min.js"></script>
 <script src="https://s3.tradingview.com/tv.js"></script>
 
+<!-- Theme logic -->
+<script>
+const themeToggle = document.getElementById('themeToggle');
+
+function applyTheme(theme){
+  if(theme==='dark'){
+    document.body.classList.add('theme-dark');
+    themeToggle.textContent='☀️';
+  }else{
+    document.body.classList.remove('theme-dark');
+    themeToggle.textContent='🌙';
+  }
+  localStorage.setItem('theme',theme);
+}
+
+themeToggle.onclick=()=>{
+  const current=document.body.classList.contains('theme-dark')?'dark':'light';
+  applyTheme(current==='dark'?'light':'dark');
+};
+
+applyTheme(localStorage.getItem('theme')||'light');
+</script>
+
+<!-- TradingView Chart -->
 <script>
 new TradingView.widget({
 container_id:"tradingview_chart",
@@ -179,26 +204,28 @@ height:500,
 symbol:"NSE:NIFTY",
 interval:"15",
 timezone:"Asia/Kolkata",
-theme:"light",
+theme: localStorage.getItem('theme')==='dark' ? "dark" : "light",
 style:"1",
 locale:"en",
 allow_symbol_change:true
 });
 </script>
 
-<script>
-document.getElementById('themeToggle').onclick=()=>{
-document.body.classList.toggle('theme-dark');
-};
-</script>
-
+<!-- Calculator toggle -->
 <script>
 function showCalc(type){
-positionCalc.style.display=type==='position'?'block':'none';
-greeksCalc.style.display=type==='greeks'?'block':'none';
+document.getElementById('positionCalc').style.display=type==='position'?'block':'none';
+document.getElementById('greeksCalc').style.display=type==='greeks'?'block':'none';
+
+document.getElementById('posBtn').className =
+type==='position'?'btn btn-primary':'btn btn-outline-primary';
+
+document.getElementById('greekBtn').className =
+type==='greeks'?'btn btn-primary':'btn btn-outline-primary';
 }
 </script>
 
+<!-- Position calc -->
 <script>
 function calculatePosition(){
 let c=+capital.value;
@@ -206,15 +233,20 @@ let r=+risk.value;
 let e=+entry.value;
 let s=+stop.value;
 let t=+target.value;
+
+if(!c||!r||!e||!s||!t){return;}
+
 let riskAmt=c*(r/100);
 let perRisk=Math.abs(e-s);
 let size=Math.floor(riskAmt/perRisk);
 let reward=Math.abs(t-e)*size;
 let rr=(reward/(perRisk*size)).toFixed(2);
+
 positionResult.innerHTML=`Size: ${size}<br>RR: ${rr}:1`;
 }
 </script>
 
+<!-- Payoff -->
 <script>
 function calculatePayoff(){
 let S=+spot.value;
@@ -225,34 +257,7 @@ payoffResult.innerHTML="P&L: "+pnl.toFixed(2);
 }
 </script>
 
-<script>
-function fetchIndexPrice(){
-let symbol=indexSelect.value;
-fetch("https://api.allorigins.win/raw?url=https://query1.finance.yahoo.com/v7/finance/quote?symbols="+symbol)
-.then(r=>r.json())
-.then(d=>{
-stockPrice.value=d.quoteResponse.result[0].regularMarketPrice;
-});
-}
-window.onload=fetchIndexPrice;
-</script>
-
-<script>
-async function loadOptionChain(){
-let sym=chainSymbol.value==="NIFTY"?"%5ENSEI":"%5ENSEBANK";
-let res=await fetch("https://api.allorigins.win/raw?url=https://query1.finance.yahoo.com/v7/finance/options/"+sym);
-let data=await res.json();
-let calls=data.optionChain.result[0].options[0].calls;
-let puts=data.optionChain.result[0].options[0].puts;
-let html="";
-for(let i=0;i<6;i++){
-html+=`<tr><td>${calls[i].strike}</td><td>${calls[i].lastPrice}</td><td>${puts[i].lastPrice}</td></tr>`;
-}
-optionChainBody.innerHTML=html;
-}
-loadOptionChain();
-</script>
-
+<!-- Market status -->
 <script>
 function updateMarketStatus(){
 let now=new Date();
@@ -266,6 +271,7 @@ marketStatus.innerHTML=open?
 updateMarketStatus();
 </script>
 
+<!-- News -->
 <script>
 fetch("https://api.allorigins.win/raw?url=https://www.moneycontrol.com/rss/MCtopnews.xml")
 .then(r=>r.text())
