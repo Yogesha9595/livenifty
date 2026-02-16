@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trading Calculators – LiveNifty</title>
+
+<link href="https://cdn.jsdelivr.net/npm/@tabler/core@latest/dist/css/tabler.min.css" rel="stylesheet"/>
+</head>
+
+<body>
+<div class="page">
+
+<!-- Header -->
+<header class="navbar navbar-expand-md navbar-light">
+<div class="container-xl">
+<h1 class="navbar-brand">LiveNifty.in</h1>
+<div class="navbar-nav flex-row order-md-last">
+<a href="/" class="nav-link">Home</a>
+<a href="/calculators" class="nav-link">Calculators</a>
+<a href="#" class="nav-link">About</a>
+<button class="btn btn-icon" id="themeToggle">🌙</button>
+</div>
+</div>
+</header>
+
+<div class="page-wrapper">
+<div class="container-xl">
+<div class="row mt-4">
+
+<!-- Left Sidebar -->
+<div class="col-md-3">
+<div class="card">
+<div class="card-header">
+<h3 class="card-title">Calculators</h3>
+</div>
+<div class="list-group list-group-flush">
+<a href="#" class="list-group-item" onclick="showCalc('position')">Position Size</a>
+<a href="#" class="list-group-item" onclick="showCalc('greeks')">Greeks</a>
+<a href="#" class="list-group-item" onclick="showCalc('breakeven')">Break-even</a>
+<a href="#" class="list-group-item" onclick="showCalc('intrinsic')">Intrinsic Value</a>
+</div>
+</div>
+</div>
+
+<!-- Main Calculator Area -->
+<div class="col-md-6">
+
+<!-- Position Size -->
+<div id="positionCalc" class="card">
+<div class="card-header">
+<h3 class="card-title">Position Size Calculator</h3>
+</div>
+<div class="card-body">
+<input id="capital" class="form-control mb-2" placeholder="Capital">
+<input id="risk" class="form-control mb-2" placeholder="Risk %">
+<input id="entry" class="form-control mb-2" placeholder="Entry">
+<input id="stop" class="form-control mb-2" placeholder="Stop">
+<button class="btn btn-primary w-100" onclick="calcPosition()">Calculate</button>
+<div id="positionResult" class="mt-3"></div>
+</div>
+</div>
+
+<!-- Greeks -->
+<div id="greeksCalc" class="card" style="display:none;">
+<div class="card-header">
+<h3 class="card-title">Greeks Calculator</h3>
+</div>
+<div class="card-body">
+<input id="stock" class="form-control mb-2" placeholder="Spot">
+<input id="strike" class="form-control mb-2" placeholder="Strike">
+<input id="vol" class="form-control mb-2" placeholder="Volatility %">
+<button class="btn btn-primary w-100" onclick="calcGreeks()">Calculate</button>
+<div id="greeksResult" class="mt-3"></div>
+</div>
+</div>
+
+<!-- Break-even -->
+<div id="breakevenCalc" class="card" style="display:none;">
+<div class="card-header">
+<h3 class="card-title">Break-even Calculator</h3>
+</div>
+<div class="card-body">
+<input id="beStrike" class="form-control mb-2" placeholder="Strike Price">
+<input id="bePremium" class="form-control mb-2" placeholder="Premium Paid">
+<button class="btn btn-primary w-100" onclick="calcBreakEven()">Calculate</button>
+<div id="beResult" class="mt-3"></div>
+</div>
+</div>
+
+<!-- Intrinsic Value -->
+<div id="intrinsicCalc" class="card" style="display:none;">
+<div class="card-header">
+<h3 class="card-title">Intrinsic Value Calculator</h3>
+</div>
+<div class="card-body">
+<input id="spot" class="form-control mb-2" placeholder="Spot Price">
+<input id="strike2" class="form-control mb-2" placeholder="Strike Price">
+<button class="btn btn-primary w-100" onclick="calcIntrinsic()">Calculate</button>
+<div id="intrinsicResult" class="mt-3"></div>
+</div>
+</div>
+
+<!-- SEO Text -->
+<div class="card mt-4">
+<div class="card-body">
+<p>
+These trading calculators help you manage risk, calculate option values,
+and determine position size before entering a trade.
+</p>
+</div>
+</div>
+
+<!-- FAQs -->
+<div class="card mt-4">
+<div class="card-header">
+<h3 class="card-title">FAQs</h3>
+</div>
+<div class="card-body">
+<p><strong>What is position sizing?</strong><br>
+It determines how many shares or lots to trade based on risk.</p>
+
+<p><strong>What are Greeks?</strong><br>
+Greeks measure option sensitivity to price, time, and volatility.</p>
+
+<p><strong>What is break-even?</strong><br>
+The price where your option trade neither gains nor loses.</p>
+</div>
+</div>
+
+</div>
+
+<!-- Right Sidebar Ad -->
+<div class="col-md-3">
+<div class="card">
+<div class="card-body text-center">
+Ad Space
+</div>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+
+<footer class="footer bg-dark text-white mt-5">
+<div class="container-xl text-center py-3">
+© 2026 LiveNifty.in
+</div>
+</footer>
+
+</div>
+
+<script>
+document.getElementById('themeToggle').onclick=()=>{
+document.body.classList.toggle('theme-dark');
+};
+
+function showCalc(type){
+positionCalc.style.display="none";
+greeksCalc.style.display="none";
+breakevenCalc.style.display="none";
+intrinsicCalc.style.display="none";
+
+if(type==="position") positionCalc.style.display="block";
+if(type==="greeks") greeksCalc.style.display="block";
+if(type==="breakeven") breakevenCalc.style.display="block";
+if(type==="intrinsic") intrinsicCalc.style.display="block";
+}
+
+function calcPosition(){
+let c=+capital.value;
+let r=+risk.value;
+let e=+entry.value;
+let s=+stop.value;
+let size=Math.floor((c*(r/100))/Math.abs(e-s));
+positionResult.innerHTML="Position Size: "+size;
+}
+
+function calcGreeks(){
+let S=+stock.value;
+let K=+strike.value;
+let v=+vol.value/100;
+let delta=(S-K)/S;
+greeksResult.innerHTML="Delta: "+delta.toFixed(2);
+}
+
+function calcBreakEven(){
+let K=+beStrike.value;
+let P=+bePremium.value;
+beResult.innerHTML="Break-even: "+(K+P);
+}
+
+function calcIntrinsic(){
+let S=+spot.value;
+let K=+strike2.value;
+intrinsicResult.innerHTML="Intrinsic: "+Math.max(0,S-K);
+}
+</script>
+
+</body>
+</html>
