@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LiveNifty</title>
+
+<link href="https://cdn.jsdelivr.net/npm/@tabler/core@latest/dist/css/tabler.min.css" rel="stylesheet"/>
+<style>
+.market-live { color: #2fb344; font-weight:600; }
+.market-closed { color: #d63939; font-weight:600; }
+.news-bullet { margin-bottom:6px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="navbar navbar-expand-md navbar-light">
+<div class="container-xl">
+<h1 class="navbar-brand">LiveNifty.in</h1>
+<div class="navbar-nav flex-row order-md-last align-items-center">
+<a href="#" class="nav-link">Home</a>
+<a href="#" class="nav-link">Calculators</a>
+<a href="#" class="nav-link">About</a>
+<a href="#" class="nav-link">💝</a>
+<button class="btn btn-icon" id="themeToggle">🌙</button>
+</div>
+</div>
+</header>
+
+<!-- Market Status -->
+<div class="container-xl mt-2">
+<div id="marketStatus"></div>
+</div>
+
+<!-- Ticker -->
+<div class="container-xl mt-2">
+<div class="tradingview-widget-container">
+<div class="tradingview-widget-container__widget"></div>
+<script src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
+{
+"symbols":[
+{"proName":"NSE:NIFTY50","title":"Nifty 50"},
+{"proName":"NSE:BANKNIFTY","title":"Bank Nifty"},
+{"proName":"BSE:SENSEX","title":"Sensex"}
+],
+"colorTheme":"light",
+"displayMode":"adaptive"
+}
+</script>
+</div>
+</div>
+
+<div class="page-wrapper">
+<div class="container-xl">
+
+<!-- Chart -->
+<div class="card mt-3">
+<div class="card-body">
+<div id="tradingview_chart"></div>
+</div>
+</div>
+
+<div class="row mt-4">
+
+<!-- Breaking News -->
+<div class="col-md-8">
+<div class="card">
+<div class="card-header">
+<h3 class="card-title">Market Commentary</h3>
+</div>
+<div class="card-body" id="newsFeed">
+Loading market news…
+</div>
+</div>
+
+<!-- Strategy Payoff -->
+<div class="card mt-4">
+<div class="card-header">
+<h3 class="card-title">Strategy Payoff Visualizer</h3>
+</div>
+<div class="card-body">
+<input id="spot" class="form-control mb-2" placeholder="Spot Price">
+<input id="strike" class="form-control mb-2" placeholder="Strike">
+<input id="premium" class="form-control mb-2" placeholder="Premium">
+<button class="btn btn-primary w-100" onclick="calculatePayoff()">Calculate</button>
+<div class="mt-2" id="payoffResult"></div>
+</div>
+</div>
+
+</div>
+
+<!-- Right Sidebar -->
+<div class="col-md-4">
+
+<!-- Capsule Calculator -->
+<div class="card">
+<div class="card-header">
+<div class="btn-group w-100">
+<button class="btn btn-primary" id="posBtn" onclick="showCalc('position')">Position</button>
+<button class="btn btn-outline-primary" id="greekBtn" onclick="showCalc('greeks')">Greeks</button>
+</div>
+</div>
+<div class="card-body">
+
+<div id="positionCalc">
+<input id="capital" class="form-control mb-2" placeholder="Capital">
+<input id="risk" class="form-control mb-2" placeholder="Risk %">
+<input id="entry" class="form-control mb-2" placeholder="Entry">
+<input id="stop" class="form-control mb-2" placeholder="Stop">
+<input id="target" class="form-control mb-2" placeholder="Target">
+<button class="btn btn-primary w-100" onclick="calculatePosition()">Calculate</button>
+<div class="mt-2" id="positionResult"></div>
+</div>
+
+<div id="greeksCalc" style="display:none;">
+<select id="indexSelect" class="form-control mb-2" onchange="fetchIndexPrice()">
+<option value="^NSEI">Nifty</option>
+<option value="^NSEBANK">BankNifty</option>
+</select>
+<input id="stockPrice" class="form-control mb-2" placeholder="Spot">
+<input id="strikePrice" class="form-control mb-2" placeholder="Strike">
+<input id="days" class="form-control mb-2" placeholder="Days">
+<input id="rate" class="form-control mb-2" placeholder="Rate %">
+<input id="volatility" class="form-control mb-2" placeholder="Volatility %">
+<button class="btn btn-primary w-100" onclick="calculateGreeks()">Calculate</button>
+<div class="mt-2" id="greeksResult"></div>
+</div>
+
+</div>
+</div>
+
+<!-- Mini Option Chain -->
+<div class="card mt-4">
+<div class="card-header">
+<h3 class="card-title">Mini Option Chain</h3>
+</div>
+<div class="card-body">
+<select id="chainSymbol" class="form-control mb-2" onchange="loadOptionChain()">
+<option value="NIFTY">NIFTY</option>
+<option value="BANKNIFTY">BANKNIFTY</option>
+</select>
+<table class="table table-sm">
+<thead>
+<tr><th>Strike</th><th>CE</th><th>PE</th></tr>
+</thead>
+<tbody id="optionChainBody"></tbody>
+</table>
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- Ad -->
+<div class="card mt-4">
+<div class="card-body text-center">Ad Space</div>
+</div>
+
+</div>
+</div>
+
+<footer class="footer bg-dark text-white mt-5">
+<div class="container-xl text-center py-3">
+© 2026 LiveNifty.in
+</div>
+</footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@tabler/core@latest/dist/js/tabler.min.js"></script>
+<script src="https://s3.tradingview.com/tv.js"></script>
+
+<script>
+new TradingView.widget({
+container_id:"tradingview_chart",
+width:"100%",
+height:500,
+symbol:"NSE:NIFTY",
+interval:"15",
+timezone:"Asia/Kolkata",
+theme:"light",
+style:"1",
+locale:"en",
+allow_symbol_change:true
+});
+</script>
+
+<script>
+document.getElementById('themeToggle').onclick=()=>{
+document.body.classList.toggle('theme-dark');
+};
+</script>
+
+<script>
+function showCalc(type){
+positionCalc.style.display=type==='position'?'block':'none';
+greeksCalc.style.display=type==='greeks'?'block':'none';
+}
+</script>
+
+<script>
+function calculatePosition(){
+let c=+capital.value;
+let r=+risk.value;
+let e=+entry.value;
+let s=+stop.value;
+let t=+target.value;
+let riskAmt=c*(r/100);
+let perRisk=Math.abs(e-s);
+let size=Math.floor(riskAmt/perRisk);
+let reward=Math.abs(t-e)*size;
+let rr=(reward/(perRisk*size)).toFixed(2);
+positionResult.innerHTML=`Size: ${size}<br>RR: ${rr}:1`;
+}
+</script>
+
+<script>
+function calculatePayoff(){
+let S=+spot.value;
+let K=+strike.value;
+let P=+premium.value;
+let pnl=(S-K)-P;
+payoffResult.innerHTML="P&L: "+pnl.toFixed(2);
+}
+</script>
+
+<script>
+function fetchIndexPrice(){
+let symbol=indexSelect.value;
+fetch("https://api.allorigins.win/raw?url=https://query1.finance.yahoo.com/v7/finance/quote?symbols="+symbol)
+.then(r=>r.json())
+.then(d=>{
+stockPrice.value=d.quoteResponse.result[0].regularMarketPrice;
+});
+}
+window.onload=fetchIndexPrice;
+</script>
+
+<script>
+async function loadOptionChain(){
+let sym=chainSymbol.value==="NIFTY"?"%5ENSEI":"%5ENSEBANK";
+let res=await fetch("https://api.allorigins.win/raw?url=https://query1.finance.yahoo.com/v7/finance/options/"+sym);
+let data=await res.json();
+let calls=data.optionChain.result[0].options[0].calls;
+let puts=data.optionChain.result[0].options[0].puts;
+let html="";
+for(let i=0;i<6;i++){
+html+=`<tr><td>${calls[i].strike}</td><td>${calls[i].lastPrice}</td><td>${puts[i].lastPrice}</td></tr>`;
+}
+optionChainBody.innerHTML=html;
+}
+loadOptionChain();
+</script>
+
+<script>
+function updateMarketStatus(){
+let now=new Date();
+let hour=now.getHours();
+let min=now.getMinutes();
+let open=(hour>9 || (hour===9 && min>=15)) && (hour<15 || (hour===15 && min<=30));
+marketStatus.innerHTML=open?
+"<span class='market-live'>● Market Open</span>":
+"<span class='market-closed'>● Market Closed</span>";
+}
+updateMarketStatus();
+</script>
+
+<script>
+fetch("https://api.allorigins.win/raw?url=https://www.moneycontrol.com/rss/MCtopnews.xml")
+.then(r=>r.text())
+.then(str=>{
+let parser=new DOMParser();
+let xml=parser.parseFromString(str,"text/xml");
+let items=xml.querySelectorAll("item");
+let html="";
+items.forEach((el,i)=>{
+if(i<6){
+html+=`<div class='news-bullet'>• ${el.querySelector("title").textContent}</div>`;
+}
+});
+newsFeed.innerHTML=html;
+});
+</script>
+
+</body>
+</html>
