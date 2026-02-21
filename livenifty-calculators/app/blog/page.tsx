@@ -1,4 +1,4 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { blogPosts } from "@/lib/blogData";
@@ -9,22 +9,29 @@ export const metadata: Metadata = {
   description:
     "Explore SIP guides, mutual fund strategies, tax planning tips and financial calculator explanations to build long-term wealth.",
   alternates: {
-    canonical: "https://livenifty.com/blog",
+    canonical: "https://livenifty.in/blog",
   },
 };
 
 const POSTS_PER_PAGE = 6;
 
-export default function BlogIndexPage({
+// ✅ Next.js 16 requires async searchParams
+export default async function BlogIndexPage({
   searchParams,
 }: {
-  searchParams?: { page?: string; q?: string; tag?: string };
+  searchParams: Promise<{
+    page?: string;
+    q?: string;
+    tag?: string;
+  }>;
 }) {
-  const page = Number(searchParams?.page) || 1;
-  const query = searchParams?.q?.toLowerCase() || "";
-  const tagFilter = searchParams?.tag || "";
+  const params = await searchParams;
 
-  // Filter posts by search & tag
+  const page = Number(params?.page) || 1;
+  const query = params?.q?.toLowerCase() || "";
+  const tagFilter = params?.tag || "";
+
+  // Filter posts
   let filteredPosts = blogPosts.filter((post) => {
     const matchesSearch =
       post.title.toLowerCase().includes(query) ||

@@ -2,8 +2,11 @@ import { MetadataRoute } from "next";
 import { blogPosts } from "@/lib/blogData";
 import { calculatorSEO } from "@/lib/calculatorSEOData";
 
+// ✅ Required for static export mode
+export const dynamic = "force-static";
+
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://livenifty.com";
+  const baseUrl = "https://livenifty.in";
   const now = new Date();
 
   /* ---------------------------
@@ -36,16 +39,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }));
 
   /* ---------------------------
-     Calculator URLs (FIXED)
+     Calculator URLs
   ---------------------------- */
   const calculatorUrls: MetadataRoute.Sitemap =
     Object.keys(calculatorSEO).map((slug) => ({
-      url: `${baseUrl}/calculators/${slug}`,
+      url: `${baseUrl}/calculators/${slug}-calculator`,
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.9,
     }));
 
+  /* ---------------------------
+     Static Core Pages
+  ---------------------------- */
   return [
     {
       url: baseUrl,
