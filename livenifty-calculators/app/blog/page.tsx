@@ -2,20 +2,39 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { blogPosts } from "@/lib/blogData";
+import AdBanner from "@/components/ads/AdBanner";
 
+const baseUrl = "https://livenifty.in";
+const POSTS_PER_PAGE = 6;
+
+// ✅ SEO Metadata
 export const metadata: Metadata = {
-  title:
-    "Finance Blog – Investment Guides & Calculators | LiveNifty",
+  title: "Finance Blog – Investment Guides & Calculators | LiveNifty",
   description:
     "Explore SIP guides, mutual fund strategies, tax planning tips and financial calculator explanations to build long-term wealth.",
+
   alternates: {
-    canonical: "https://livenifty.in/blog",
+    canonical: `${baseUrl}/blog`,
+  },
+
+  openGraph: {
+    title: "Finance Blog – Investment Guides & Calculators",
+    description:
+      "Expert financial guides and investment strategies.",
+    url: `${baseUrl}/blog`,
+    siteName: "LiveNifty",
+    type: "website",
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "LiveNifty Finance Blog",
+    description:
+      "Investment guides, SIP strategies and calculator tutorials.",
   },
 };
 
-const POSTS_PER_PAGE = 6;
-
-// ✅ Next.js 16 requires async searchParams
+// ✅ Next.js 16 async params
 export default async function BlogIndexPage({
   searchParams,
 }: {
@@ -31,7 +50,7 @@ export default async function BlogIndexPage({
   const query = params?.q?.toLowerCase() || "";
   const tagFilter = params?.tag || "";
 
-  // Filter posts
+  // ✅ Filter posts
   let filteredPosts = blogPosts.filter((post) => {
     const matchesSearch =
       post.title.toLowerCase().includes(query) ||
@@ -44,8 +63,26 @@ export default async function BlogIndexPage({
     return matchesSearch && matchesTag;
   });
 
-  const featuredPosts = filteredPosts.filter(
-    (post) => post.featured
+  // ✅ Featured post (only first)
+  const featuredPost =
+    page === 1
+      ? filteredPosts.find((post) => post.featured)
+      : null;
+
+  // ✅ Remove featured from list
+  if (featuredPost) {
+    filteredPosts = filteredPosts.filter(
+      (post) => post.slug !== featuredPost.slug
+    );
+  }
+
+  const totalPages = Math.ceil(
+    filteredPosts.length / POSTS_PER_PAGE
+  );
+
+  const paginatedPosts = filteredPosts.slice(
+    (page - 1) * POSTS_PER_PAGE,
+    page * POSTS_PER_PAGE
   );
 
   const categories = [
@@ -58,18 +95,13 @@ export default async function BlogIndexPage({
     ),
   ];
 
-  const totalPages = Math.ceil(
-    filteredPosts.length / POSTS_PER_PAGE
-  );
-
-  const paginatedPosts = filteredPosts.slice(
-    (page - 1) * POSTS_PER_PAGE,
-    page * POSTS_PER_PAGE
-  );
-
   return (
-    <div className="bg-white">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+    <main className="bg-white dark:bg-black transition-colors">
+
+      {/* TOP ADSENSE SLOT */}
+      <AdBanner />
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-14">
 
         {/* HEADER */}
         <header className="max-w-3xl mb-12">
@@ -77,9 +109,8 @@ export default async function BlogIndexPage({
             Financial Guides & Investment Insights
           </h1>
 
-          <p className="text-gray-600 text-lg">
-            Learn how financial calculators work, understand investment formulas,
-            and build smarter long-term wealth strategies.
+          <p className="text-gray-600 dark:text-gray-400 text-lg">
+            Learn investing, mutual funds, tax saving, and financial planning.
           </p>
         </header>
 
@@ -88,22 +119,21 @@ export default async function BlogIndexPage({
           <input
             type="text"
             name="q"
-            placeholder="Search guides..."
+            placeholder="Search financial guides..."
             defaultValue={query}
-            className="w-full md:w-1/2 px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full md:w-1/2 px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 dark:bg-black dark:border-gray-800"
           />
         </form>
 
         {/* CATEGORY FILTER */}
-        <div className="flex flex-wrap gap-3 mb-8">
+        <div className="flex flex-wrap gap-3 mb-6">
           {categories.map((category) => (
             <Link
               key={category}
-              href={`/blog/${category}`}
-              className="px-4 py-2 bg-gray-100 rounded-full text-sm hover:bg-blue-600 hover:text-white transition"
+              href={`/blog?category=${category}`}
+              className="px-4 py-2 bg-gray-100 dark:bg-gray-900 rounded-full text-sm hover:bg-blue-600 hover:text-white transition"
             >
-              {category.charAt(0).toUpperCase() +
-                category.slice(1)}
+              {category}
             </Link>
           ))}
         </div>
@@ -122,117 +152,138 @@ export default async function BlogIndexPage({
         </div>
 
         {/* FEATURED */}
-        {featuredPosts.length > 0 && page === 1 && (
+        {featuredPost && (
           <section className="mb-16">
+
             <h2 className="text-2xl font-semibold mb-6">
               Featured Guide
             </h2>
 
-            {featuredPosts.map((post) => (
-              <article key={post.slug}>
-                <Link
-                  href={`/blog/${post.slug}`}
-                  className="block border rounded-2xl overflow-hidden hover:shadow-xl transition bg-blue-50"
-                >
-                  {post.image && (
-                    <div className="relative w-full h-64">
-                      <Image
-                        src={post.image}
-                        alt={post.imageAlt || post.title}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                  )}
+            <Link
+              href={`/blog/${featuredPost.slug}`}
+              className="block rounded-2xl overflow-hidden hover:shadow-xl transition border dark:border-gray-800"
+            >
+              <div className="relative h-64">
 
-                  <div className="p-8">
-                    <div className="text-sm text-blue-600 font-medium mb-2">
-                      {post.category}
-                    </div>
+                <Image
+                  src={featuredPost.image}
+                  alt={featuredPost.title}
+                  fill
+                  priority
+                  className="object-cover"
+                />
 
-                    <h3 className="text-2xl font-bold mb-3">
-                      {post.title}
-                    </h3>
+              </div>
 
-                    <p className="text-gray-700">
-                      {post.description}
-                    </p>
+              <div className="p-8 bg-blue-50 dark:bg-gray-900">
 
-                    <div className="mt-4 text-blue-600 font-medium">
-                      Read Full Guide →
-                    </div>
-                  </div>
-                </Link>
-              </article>
-            ))}
+                <div className="text-blue-600 text-sm mb-2">
+                  {featuredPost.category}
+                </div>
+
+                <h3 className="text-2xl font-bold mb-3">
+                  {featuredPost.title}
+                </h3>
+
+                <p className="text-gray-600 dark:text-gray-400">
+                  {featuredPost.description}
+                </p>
+
+              </div>
+            </Link>
+
           </section>
         )}
 
+        {/* ADSENSE SLOT */}
+        <AdBanner />
+
         {/* POSTS GRID */}
         <section>
+
+          {paginatedPosts.length === 0 && (
+            <p className="text-gray-500 text-center">
+              No articles found.
+            </p>
+          )}
+
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+
             {paginatedPosts.map((post) => (
-              <article key={post.slug}>
-                <Link
-                  href={`/blog/${post.slug}`}
-                  className="group block border rounded-2xl overflow-hidden hover:shadow-xl transition bg-white"
-                >
-                  {post.image && (
-                    <div className="relative w-full h-48">
-                      <Image
-                        src={post.image}
-                        alt={post.imageAlt || post.title}
-                        fill
-                        className="object-cover group-hover:scale-105 transition duration-300"
-                      />
-                    </div>
-                  )}
 
-                  <div className="p-6">
-                    <div className="mb-2 text-sm text-blue-600 font-medium">
-                      {post.category}
-                    </div>
+              <Link
+                key={post.slug}
+                href={`/blog/${post.slug}`}
+                className="group border rounded-2xl overflow-hidden hover:shadow-xl transition dark:border-gray-800"
+              >
 
-                    <h3 className="text-xl font-semibold mb-3 group-hover:text-blue-600 transition">
-                      {post.title}
-                    </h3>
+                <div className="relative h-48">
 
-                    <p className="text-gray-600 text-sm">
-                      {post.description}
-                    </p>
+                  <Image
+                    src={post.image}
+                    alt={post.title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition"
+                  />
 
-                    <div className="mt-4 text-blue-600 font-medium text-sm">
-                      Read More →
-                    </div>
+                </div>
+
+                <div className="p-6">
+
+                  <div className="text-blue-600 text-sm mb-2">
+                    {post.category}
                   </div>
-                </Link>
-              </article>
+
+                  <h3 className="text-lg font-semibold mb-2 group-hover:text-blue-600">
+                    {post.title}
+                  </h3>
+
+                  <p className="text-gray-600 dark:text-gray-400 text-sm">
+                    {post.description}
+                  </p>
+
+                </div>
+
+              </Link>
+
             ))}
+
           </div>
+
         </section>
 
         {/* PAGINATION */}
         {totalPages > 1 && (
           <div className="flex justify-center mt-16 gap-3">
-            {Array.from({ length: totalPages }).map(
-              (_, index) => (
+
+            {Array.from({ length: totalPages }).map((_, i) => {
+
+              const pageNum = i + 1;
+
+              return (
                 <Link
-                  key={index}
-                  href={`/blog?page=${index + 1}`}
+                  key={pageNum}
+                  href={`/blog?page=${pageNum}`}
                   className={`px-4 py-2 rounded-lg border ${
-                    page === index + 1
+                    page === pageNum
                       ? "bg-blue-600 text-white"
-                      : "bg-white hover:bg-blue-50"
+                      : "hover:bg-gray-100 dark:hover:bg-gray-900"
                   }`}
                 >
-                  {index + 1}
+                  {pageNum}
                 </Link>
-              )
-            )}
+              );
+
+            })}
+
           </div>
         )}
 
       </div>
-    </div>
+
+      {/* BOTTOM ADSENSE SLOT */}
+      <AdBanner />
+
+    </main>
   );
 }
